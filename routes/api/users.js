@@ -6,6 +6,14 @@ const passport = require('passport')
 const key = require('../../config/keys').secret
 const User = require('../../models/User.js')
 
+
+const badResult = (message) => {
+    return {
+        success: false,
+        message: message,
+        data: null
+    }
+}
 /**
  * @route POST api/users/register
  * @desc Register the user
@@ -13,34 +21,27 @@ const User = require('../../models/User.js')
  * 
 */
 router.post('/register', async (req, res) => {
-    const badResult = (message) => {
-        return {
-            success: false,
-            message: "Cant register" + message,
-            data: null
-        }
-    }
     if (!req.body.name ||
         !req.body.username ||
         !req.body.email ||
         !req.body.password ||
         !req.body.confirm_password) {
-        return res.status(400).json(badResult(", All fields required"))
+        return res.status(400).json(badResult("Cant register, All fields required"))
     } else if (req.body.password !== req.body.confirm_password) {
         // Password validation
-        return res.status(400).json(badResult(", Passwords do not match"))
+        return res.status(400).json(badResult("Cant register, Passwords do not match"))
     } else {
         //Check for the unique username
         await User.findOne({ username: req.body.username })
             .then(async (user) => {
                 if (user) {
-                    return res.status(400).json(badResult(", Username is already taken"))
+                    return res.status(400).json(badResult("Cant register, Username is already taken"))
                 } else {
                     //Check for the unique email
                     await User.findOne({ email: req.body.email })
                         .then(async (user) => {
                             if (user) {
-                                return res.status(400).json(badResult(", Email is already taken"))
+                                return res.status(400).json(badResult("Cant register, Email is already taken"))
                             } else {
                                 // Hashing the password
                                 const salt = await bcrypt.genSalt(10)
@@ -58,15 +59,11 @@ router.post('/register', async (req, res) => {
                                         if (user) {
                                             return res.status(200).json({
                                                 success: true,
-                                                message: "New user added",
+                                                message: "Register successfull!",
                                                 data: user
                                             })
                                         } else {
-                                            return res.status(400).json({
-                                                success: false,
-                                                message: "Something went wrong",
-                                                data: null
-                                            })
+                                            return res.status(400).json(badResult("Cant register, Something went wrong"))
                                         }
                                     })
                                     .catch((err) => {
@@ -86,17 +83,10 @@ router.post('/register', async (req, res) => {
  * 
 */
 router.post('/login', async (req, res) => {
-    const badResult = (message) => {
-        return {
-            success: false,
-            message: "Invalid credentials" + message,
-            data: null
-        }
-    }
     const validatePasswordAndLogin = async (user) => {
         if (req.body.password) {
             if (req.body.password.length < 6) {
-                res.status(400).json(badResult(", Password is too short"))
+                res.status(400).json(badResult("Invalid credentials, Password is too short"))
             } else {
                 bcrypt.compare(req.body.password, user.password).then(matching => {
                     // User password is correct, send jwt
@@ -117,12 +107,12 @@ router.post('/login', async (req, res) => {
                             })
                         })
                     } else {
-                        res.status(400).json(badResult(""))
+                        res.status(400).json(badResult("Invalid credentials"))
                     }
                 })
             }
         } else {
-            res.status(400).json(badResult(", Password needed"))
+            res.status(400).json(badResult("Invalid credentials, Password needed"))
         }
     }
 
@@ -131,7 +121,7 @@ router.post('/login', async (req, res) => {
             .then((user) => {
                 // Checking if user exists by username
                 if (!user) {
-                    return res.status(404).json(badResult(", Username doesn't exist"))
+                    return res.status(404).json(badResult("Invalid credentials, Username doesn't exist"))
                 }
                 validatePasswordAndLogin(user);
             })
@@ -140,7 +130,7 @@ router.post('/login', async (req, res) => {
             .then((user) => {
                 // Checking if user exists email
                 if (!user) {
-                    return res.status(404).json(badResult(", Email doesn't exist"))
+                    return res.status(404).json(badResult("Invalid credentials, Email doesn't exist"))
                 }
                 validatePasswordAndLogin(user);
             })
@@ -162,11 +152,7 @@ router.get('/', async (req, res) => {
                 data: users
             })
         } else {
-            res.status(404).json({
-                success: false,
-                message: "No users found",
-                data: null
-            })
+            res.status(404).json(badResult("No users found"))
         }
     })
 })
@@ -180,22 +166,15 @@ router.get('/', async (req, res) => {
 */
 router.delete('/:userId', async (req, res) => {
     await User.findByIdAndRemove(req.params.userId).then((user) => {
-        if (!user) res.status(404).json({
-            success: false,
-            message: "User not found",
-            data: null
-        })
-        else res.status(200).json({
+        if (!user) {
+            res.status(404).json(badResult("User not found"))
+        } else res.status(200).json({
             success: true,
             message: "User deleted",
             data: user
         })
     }).catch((err) => {
-        res.status(400).json({
-            success: false,
-            message: `Error: ${err}`,
-            data: null
-        })
+        res.status(400).json(badResult(`Error: ${err}`))
     })
 
 })
