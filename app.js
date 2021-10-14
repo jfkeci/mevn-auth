@@ -2,18 +2,24 @@ const express = require('express')
 const mongoose = require('mongoose')
 const path = require('path')
 const cors = require('cors')
+const passport = require('passport')
 
 // Require the routes
 const userRoute = require('./routes/api/users')
 
 require('dotenv').config()
 
-//Init app
+// Init app
 const app = express();
 
-//Middlewares
+// Middlewares
 app.use(express.json())
 app.use(cors())
+
+// Passport middleware
+app.use(passport.initialize());
+// Bring in the strategy
+require('./config/passport')(passport)
 
 // Setting up the static directory
 app.use(express.static(path.join(__dirname, 'public')))

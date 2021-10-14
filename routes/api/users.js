@@ -137,6 +137,16 @@ router.post('/login', async (req, res) => {
     }
 })
 
+router.get('/profile', passport.authenticate('jwt', {
+    session: false
+}), (req, res) => {
+    return res.json({
+        success: true,
+        message: "Get user profile",
+        data: req.user
+    })
+})
+
 /**
  * @route GET api/users/
  * @desc Get all users
@@ -176,7 +186,6 @@ router.delete('/:userId', async (req, res) => {
     }).catch((err) => {
         res.status(400).json(badResult(`Error: ${err}`))
     })
-
 })
 
 module.exports = router;
