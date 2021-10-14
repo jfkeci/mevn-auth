@@ -32,7 +32,7 @@ router.post('/register', async (req, res) => {
             data: null
         })
     } else {
-        //Check for the unique email and username
+        //Check for the unique username
         await User.findOne({ username: req.body.username })
             .then(async (user) => {
                 if (user) {
@@ -42,6 +42,7 @@ router.post('/register', async (req, res) => {
                         data: null
                     })
                 } else {
+                    //Check for the unique email
                     await User.findOne({ email: req.body.email })
                         .then(async (user) => {
                             if (user) {
@@ -95,48 +96,44 @@ router.post('/register', async (req, res) => {
  * 
 */
 router.post('/login', async (req, res) => {
-    const validatePasswordAndLogin = (user) => {
+    const badResult = (message) => {
+        return {
+            success: false,
+            message: "Invalid credentials" + message,
+            data: null
+        }
+    }
+    const validatePasswordAndLogin = async (user) => {
         if (req.body.password) {
             if (req.body.password.length < 6) {
-                res.status(400).json({
-                    success: false,
-                    message: "Password is too short",
-                    data: null
+                res.status(400).json(badResult(", Password is too short"))
+            } else {
+                bcrypt.compare(req.body.password, user.password).then(matching => {
+                    // User password is correct, send jwt
+                    if (matching) {
+                        const payload = {
+                            _id: user._id,
+                            username: user.username,
+                            name: user.name,
+                            email: user.email
+                        }
+                        jwt.sign(payload, key, {
+                            expiresIn: 604800
+                        }, (err, token) => {
+                            res.status(200).json({
+                                success: true,
+                                message: "User logged in",
+                                data: token
+                            })
+                        })
+                    } else {
+                        res.status(400).json(badResult(""))
+                    }
                 })
             }
         } else {
-            res.status(400).json({
-                success: false,
-                message: "Password needed",
-                data: null
-            })
+            res.status(400).json(badResult(", Password needed"))
         }
-        bcrypt.compare(req.body.password, user.password).then(matching => {
-            // User password is correct, send jwt
-            if (matching) {
-                const payload = {
-                    _id: user._id,
-                    username: user.username,
-                    name: user.name,
-                    email: user.email
-                }
-                jwt.sign(payload, key, {
-                    expiresIn: 604800
-                }, (err, token) => {
-                    res.status(200).json({
-                        success: true,
-                        message: "User logged in",
-                        data: token
-                    })
-                })
-            } else {
-                res.status(400).json({
-                    success: false,
-                    message: "Unvalid credentials",
-                    data: null
-                })
-            }
-        })
     }
 
     if (req.body.username) {
@@ -144,11 +141,7 @@ router.post('/login', async (req, res) => {
             .then((user) => {
                 // Checking if user exists by username
                 if (!user) {
-                    return res.status(404).json({
-                        success: false,
-                        message: "Username not found",
-                        data: null
-                    })
+                    return res.status(404).json(badResult(", Username doesn't exist"))
                 }
                 validatePasswordAndLogin(user);
             })
@@ -157,11 +150,7 @@ router.post('/login', async (req, res) => {
             .then((user) => {
                 // Checking if user exists email
                 if (!user) {
-                    return res.status(404).json({
-                        success: false,
-                        message: "Email not found",
-                        data: null
-                    })
+                    return res.status(404).json(badResult(", Email doesn't exist"))
                 }
                 validatePasswordAndLogin(user);
             })
