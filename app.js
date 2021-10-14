@@ -7,8 +7,6 @@ const passport = require('passport')
 // Require the routes
 const userRoute = require('./routes/api/users')
 
-require('dotenv').config()
-
 // Init app
 const app = express();
 
@@ -18,7 +16,7 @@ app.use(cors())
 
 // Passport middleware
 app.use(passport.initialize());
-// Bring in the strategy
+// Bring in the passport strategy
 require('./config/passport')(passport)
 
 // Setting up the static directory
