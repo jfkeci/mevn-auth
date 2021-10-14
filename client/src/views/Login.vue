@@ -7,7 +7,7 @@
       header-bg-variant="primary"
       header-text-variant="white"
     >
-      <b-form @submit="onSubmit" class="mt-3">
+      <b-form @click.prevent="onSubmit" class="mt-3">
         <b-form-group
           id="input-group-1"
           label="Your Email:"
@@ -15,7 +15,7 @@
         >
           <b-form-input
             id="input-1"
-            v-model="form.email"
+            v-model="user.email"
             type="email"
             placeholder="Email"
             required
@@ -29,37 +29,57 @@
         >
           <b-form-input
             id="input-2"
-            v-model="form.password"
+            v-model="user.password"
             placeholder="Password"
             type="password"
             required
           ></b-form-input>
         </b-form-group>
 
+        <hr />
+        <Messages :messages="messages" />
+
         <b-button type="submit" class="mt-3" variant="primary">Login</b-button>
         &nbsp;&nbsp;&nbsp;
         <router-link to="/register">Need an account?</router-link>
       </b-form>
     </b-card>
-    <b-card class="mt-3" header="Form">
-      <pre class="m-0">{{ form }}</pre>
+    <b-card class="mt-3" header="User">
+      <pre class="m-0">{{ user }}</pre>
     </b-card>
   </div>
 </template>
 
 <script>
+import messagesMixin from "../mixins/messagesMixin";
+import { mapActions } from "vuex";
 export default {
   name: "Login",
+  mixins: [messagesMixin],
   data() {
     return {
-      form: {
+      user: {
         email: "",
         password: "",
       },
     };
   },
   methods: {
-    onSubmit() {},
+    ...mapActions(["login"]),
+    onSubmit() {
+      this.login(this.user)
+        .then((res) => {
+          if (res.data.success) {
+            this.$router.push({ name: "Profile" });
+          } else {
+            this.setMessage("danger", res.data.message);
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          this.setMessage("danger", "Something went wrong");
+        });
+    },
   },
 };
 </script>

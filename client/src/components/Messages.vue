@@ -14,10 +14,8 @@
 <script>
 export default {
   name: "Messages",
-  data() {
-    return {
-      messages: [],
-    };
+  props: {
+    messages: [],
   },
 };
 </script>
