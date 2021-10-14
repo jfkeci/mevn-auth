@@ -1,6 +1,12 @@
 <template>
   <div>
-    <b-card class="mt-3" header="Login">
+    <b-card
+      class="mt-3"
+      header="Login"
+      border-variant="primary"
+      header-bg-variant="primary"
+      header-text-variant="white"
+    >
       <b-form @submit="onSubmit" class="mt-3">
         <b-form-group
           id="input-group-1"
