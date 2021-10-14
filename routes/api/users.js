@@ -13,87 +13,79 @@ const User = require('../../models/User.js')
  * 
 */
 router.post('/register', async (req, res) => {
-    // Object destructuring
-    let {
-        name,
-        username,
-        email,
-        password,
-        confirm_password
-    } = req.body
 
-    // Password validation
-    if (password !== confirm_password) {
+    if (!req.body.name ||
+        !req.body.username ||
+        !req.body.email ||
+        !req.body.password ||
+        !req.body.confirm_password) {
+        return res.status(400).json({
+            success: false,
+            message: "All fields required",
+            data: null
+        })
+    } else if (req.body.password !== req.body.confirm_password) {
+        // Password validation
         return res.status(400).json({
             success: false,
             message: "Passwords do not match",
             data: null
         })
-    } else if (password.length < 6) {
-        return res.status(400).json({
-            success: false,
-            message: "Password is too short",
-            data: null
-        })
-    }
-
-    //Check for the unique email and username
-    if (req.params.username) {
-        await User.findOne({ username: username })
-            .then((user) => {
+    } else {
+        //Check for the unique email and username
+        await User.findOne({ username: req.body.username })
+            .then(async (user) => {
                 if (user) {
                     return res.status(400).json({
                         success: false,
                         message: "Username is already taken",
                         data: null
                     })
-                }
-            })
-    } else if (req.params.email) {
-        await User.findOne({ email: email })
-            .then((user) => {
-                if (user) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Email is already taken",
-                        data: null
-                    })
+                } else {
+                    await User.findOne({ email: req.body.email })
+                        .then(async (user) => {
+                            if (user) {
+                                return res.status(400).json({
+                                    success: false,
+                                    message: "Email is already taken",
+                                    data: null
+                                })
+                            } else {
+                                // Hashing the password
+                                const salt = await bcrypt.genSalt(10)
+                                const hashPassword = await bcrypt.hash(req.body.password, salt)
+                                // Creating a new user object
+                                const newUser = new User({
+                                    name: req.body.name,
+                                    username: req.body.username,
+                                    password: hashPassword,
+                                    email: req.body.email
+                                });
+                                // Saving the user
+                                await newUser.save()
+                                    .then((user) => {
+                                        if (user) {
+                                            return res.status(200).json({
+                                                success: true,
+                                                message: "New user added",
+                                                data: user
+                                            })
+                                        } else {
+                                            return res.status(400).json({
+                                                success: false,
+                                                message: "Something went wrong",
+                                                data: null
+                                            })
+                                        }
+                                    })
+                                    .catch((err) => {
+                                        console.log(err)
+                                    })
+                            }
+                        })
                 }
             })
     }
-
-    // Creating a new user object
-    let newUser = new User({
-        name,
-        username,
-        password,
-        email
-    });
-
-    // Hashing the password
-    bcrypt.genSalt(10, (err, salt) => {
-        bcrypt.hash(password, salt, (err, hash) => {
-            if (err) throw err
-            newUser.password = hash
-        })
-    })
-
-    // Saving the user
-    await newUser.save()
-        .then((user) => {
-            res.status(200).json({
-                success: true,
-                message: "New user added",
-                data: user
-            })
-        })
-        .catch((err) => {
-            return res.status(400).json({
-                success: false,
-                message: "Something went wrong",
-                data: null
-            })
-        })
 })
 
 /**
@@ -103,7 +95,6 @@ router.post('/register', async (req, res) => {
  * 
 */
 router.post('/login', async (req, res) => {
-
     const validatePasswordAndLogin = (user) => {
         if (req.body.password) {
             if (req.body.password.length < 6) {
@@ -175,8 +166,6 @@ router.post('/login', async (req, res) => {
                 validatePasswordAndLogin(user);
             })
     }
-
-
 })
 
 /**
