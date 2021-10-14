@@ -68,7 +68,13 @@
           ></b-form-input>
         </b-form-group>
 
+        <hr />
+
+        <Messages :messages="messages" />
+
         <b-button type="submit" class="mt-3" variant="primary">Login</b-button>
+        &nbsp;&nbsp;&nbsp;
+        <router-link to="/login">Already have an accout?</router-link>
       </b-form>
     </b-card>
     <b-card class="mt-3" header="Form">
@@ -78,6 +84,8 @@
 </template>
 
 <script>
+import Messages from "../components/Messages.vue";
+
 export default {
   name: "Login",
   data() {
@@ -89,7 +97,11 @@ export default {
         password: "",
         confirm_password: "",
       },
+      messages: [],
     };
+  },
+  components: {
+    Messages,
   },
   methods: {
     onSubmit() {},
