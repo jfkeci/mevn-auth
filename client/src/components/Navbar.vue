@@ -18,10 +18,18 @@
             <template #button-content>
               <em>User</em>
             </template>
-            <b-dropdown-item to="/login">Login</b-dropdown-item>
-            <b-dropdown-item to="/register">Register</b-dropdown-item>
-            <b-dropdown-item to="/profile">Profile</b-dropdown-item>
-            <b-dropdown-item to="/logout">Logout</b-dropdown-item>
+            <b-dropdown-item to="/login" v-if="!isLoggedIn">
+              Login
+            </b-dropdown-item>
+            <b-dropdown-item to="/register" v-if="!isLoggedIn">
+              Register
+            </b-dropdown-item>
+            <b-dropdown-item to="/profile" v-if="isLoggedIn">
+              Profile
+            </b-dropdown-item>
+            <b-dropdown-item to="/logout" v-if="isLoggedIn">
+              Logout
+            </b-dropdown-item>
           </b-nav-item-dropdown>
         </b-navbar-nav>
       </b-collapse>
@@ -30,8 +38,12 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
   name: "Navbar",
+  computed: {
+    ...mapGetters(["isLoggedIn"]),
+  },
 };
 </script>
 <style>
