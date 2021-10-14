@@ -13,44 +13,34 @@ const User = require('../../models/User.js')
  * 
 */
 router.post('/register', async (req, res) => {
-
+    const badResult = (message) => {
+        return {
+            success: false,
+            message: "Cant register" + message,
+            data: null
+        }
+    }
     if (!req.body.name ||
         !req.body.username ||
         !req.body.email ||
         !req.body.password ||
         !req.body.confirm_password) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields required",
-            data: null
-        })
+        return res.status(400).json(badResult(", All fields required"))
     } else if (req.body.password !== req.body.confirm_password) {
         // Password validation
-        return res.status(400).json({
-            success: false,
-            message: "Passwords do not match",
-            data: null
-        })
+        return res.status(400).json(badResult(", Passwords do not match"))
     } else {
         //Check for the unique username
         await User.findOne({ username: req.body.username })
             .then(async (user) => {
                 if (user) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Username is already taken",
-                        data: null
-                    })
+                    return res.status(400).json(badResult(", Username is already taken"))
                 } else {
                     //Check for the unique email
                     await User.findOne({ email: req.body.email })
                         .then(async (user) => {
                             if (user) {
-                                return res.status(400).json({
-                                    success: false,
-                                    message: "Email is already taken",
-                                    data: null
-                                })
+                                return res.status(400).json(badResult(", Email is already taken"))
                             } else {
                                 // Hashing the password
                                 const salt = await bcrypt.genSalt(10)
