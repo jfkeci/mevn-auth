@@ -25,10 +25,10 @@ const actions = {
     //Login action
     async login({ commit }, user) {
         commit('auth_request');
-        let res = await axios.post('http://localhost:5000/api/user/login')
+        let res = await axios.post('http://localhost:5000/api/user/login', user)
         if (res.data.success) {
             const token = res.data.token
-            user = res.data.user
+            const user = res.data.user
 
             // Store the token
             localStorage.setItem('token', token)
@@ -43,7 +43,14 @@ const actions = {
 }
 
 const mutations = {
-
+    auth_request(state) {
+        state.status = 'loading'
+    },
+    auth_success(state, token, user) {
+        state.token = token
+        state.user = user
+        state.status = 'success'
+    }
 }
 
 export default {

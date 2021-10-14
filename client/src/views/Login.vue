@@ -7,7 +7,7 @@
       header-bg-variant="primary"
       header-text-variant="white"
     >
-      <b-form @click.prevent="onSubmit" class="mt-3">
+      <b-form @submit.prevent="onSubmit" class="mt-3">
         <b-form-group
           id="input-group-1"
           label="Your Email:"
@@ -39,7 +39,7 @@
         <hr />
         <Messages :messages="messages" />
 
-        <b-button type="submit" class="mt-3" variant="primary">Login</b-button>
+        <input type="submit" class="btn btn-primary mt-3" value="Login" />
         &nbsp;&nbsp;&nbsp;
         <router-link to="/register">Need an account?</router-link>
       </b-form>
@@ -72,6 +72,7 @@ export default {
           if (res.data.success) {
             this.$router.push({ name: "Profile" });
           } else {
+            console.log(res.data.message);
             this.setMessage("danger", res.data.message);
           }
         })
